@@ -25,8 +25,21 @@ pnpm add -D vite-plugin-vue-svg-sprite
 npm i -D vite-plugin-vue-svg-sprite
 ```
 
+## 🛠 本地开发
 
-## ⚙️ 在 vite.config.ts 中配置：
+```bash
+pnpm install
+pnpm dev
+```
+
+启动后会同时运行：
+- 插件源码 watch 构建（`unbuild --watch`）
+- 示例项目开发服务器（`http://localhost:5173`）
+
+修改 `example/assets/svg/` 下的 SVG 文件保存后，页面会自动刷新。
+
+## ⚙️ 在 vite.config.ts 中配置
+
 ```js
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -46,16 +59,20 @@ export default defineConfig({
     })
   ]
 })
+```
 
 ## svgSpritePlugin 配置
-```
+
 | 选项                | 类型                        | 默认值               | 说明                              |
 | ----------------- | ------------------------- | ----------------- | ------------------------------- |
 | `dir`             | `string`                  | `src/assets/svg`  | SVG 目录路径                        |
+| `prefix`          | `string`                  | `sprite`          | symbol id 前缀                      |
+| `lazy`            | `boolean`                 | `true`            | 是否默认懒加载，可被组件 `:lazy` 覆盖       |
 
 
-## ⚙️ 在 app.vue 中配置：
-```js
+## ⚙️ 在 app.vue 中配置
+
+```vue
 <script setup lang="ts">
 // 引入插件提供的虚拟模块svg集
 import Svgs from 'virtual:svgs'
@@ -69,8 +86,9 @@ import Svgs from 'virtual:svgs'
 ```
 
 
-## ⚙️ 在你的页面，例如：home.vue 中使用：
-```js
+## ⚙️ 在你的页面，例如：home.vue 中使用
+
+```vue
 <script setup lang="ts">
 // 引入插件提供的虚拟模块
 import SvgIcon from 'virtual:svg-icon'
@@ -82,15 +100,14 @@ import SvgIcon from 'virtual:svg-icon'
     <page>
         <SvgIcon style="color: blue" name="score" />
         <SvgIcon name="About/score" />
+        <SvgIcon name="menu" title="菜单" />
+        <SvgIcon name="add" :lazy="false" />
     </page>
 </template>
 ```
-
-<!-- == -->
 
 ## License
 
 [MIT](https://opensource.org/licenses/MIT)
 
 Copyright (c) 2024-present, ASH
-

@@ -1,61 +1,112 @@
-import { onBeforeUnmount, defineComponent, h, onMounted, ref, Ref } from 'vue'
-import { loadIcon, config } from 'virtual:svgs-sprite'
-
-// 注释不能删除，它是替换符
-/*! __SPRITE__PATH__ */
+import {
+  onBeforeUnmount,
+  defineComponent,
+  h,
+  mergeProps,
+  nextTick,
+  onMounted,
+  ref,
+  watch,
+  type Ref,
+} from 'vue'
+import { loadIcon, config, toSymbolId } from 'virtual:svgs-sprite'
 
 export default defineComponent({
   name: 'SvgIcon',
+  inheritAttrs: false,
   props: {
     name: { type: String, required: true },
     color: { type: String, default: 'currentColor' },
-    lazy: { type: Boolean, required: false, default: true },
+    lazy: { type: Boolean, default: undefined },
+    title: { type: String, default: '' },
   },
-  setup(props: { name: string; color?: string; lazy?: boolean; }) {
+  setup(props, { attrs }) {
     const elRef: Ref<SVGSVGElement | null> = ref(null)
-    const loaded = ref<boolean>(false)
+    const isVisible = ref(false)
     let observer: IntersectionObserver | null = null
 
-    const load = () => {
-      if (loaded.value) return
-      loadIcon(props.name)
-      loaded.value = true
+    const shouldLazy = () => props.lazy ?? config.lazy ?? true
+
+    const requestLoad = (name: string) => {
+      if (!name) return
+      loadIcon(name)
     }
 
-    onMounted(() => {
-      if (!props.lazy) {
-        load()
+    const disconnectObserver = () => {
+      observer?.disconnect()
+      observer = null
+    }
+
+    const startObserver = async () => {
+      await nextTick()
+      disconnectObserver()
+
+      if (!shouldLazy()) {
+        isVisible.value = true
+        requestLoad(props.name)
         return
       }
 
       observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          load()
-          observer?.disconnect()
+        if (entries[0]?.isIntersecting) {
+          isVisible.value = true
+          requestLoad(props.name)
+          disconnectObserver()
         }
       })
 
       if (elRef.value) observer.observe(elRef.value)
+    }
+
+    onMounted(() => {
+      void startObserver()
     })
+
+    watch(
+      () => props.name,
+      (name) => {
+        if (isVisible.value || !shouldLazy()) {
+          requestLoad(name)
+        }
+      },
+    )
+
+    watch(
+      () => props.lazy,
+      () => {
+        void startObserver()
+      },
+    )
 
     onBeforeUnmount(() => {
-      observer?.disconnect()
+      disconnectObserver()
     })
 
-    return () =>
-      h(
+    return () => {
+      const labelled = Boolean(props.title)
+      const style: Record<string, string> = {
+        display: 'inline-block',
+        verticalAlign: 'middle',
+      }
+
+      if (props.color !== 'currentColor') {
+        style.color = props.color
+      }
+
+      return h(
         'svg',
-        {
+        mergeProps(attrs, {
           ref: elRef,
-          'aria-hidden': 'true',
-          // style: {
-          //   color: props.color
-          // }
-        },
+          'aria-hidden': labelled ? undefined : 'true',
+          'aria-label': labelled ? props.title : undefined,
+          role: labelled ? 'img' : undefined,
+          style,
+        }),
         h('use', {
-          href: `#${config?.prefix}-${props.name}`,
-          xhref: `#${config?.prefix}-${props.name}`,
-        })
+          href: `#${toSymbolId(props.name)}`,
+          xlinkHref: `#${toSymbolId(props.name)}`,
+        }),
       )
+    }
   },
 })
