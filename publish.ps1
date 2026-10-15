@@ -21,7 +21,7 @@ Push-Location -Path "./"
 try {
   npm publish --access public
 } catch {
-  Write-Host "Failed to publish vite-plugin-vue-svg-sprite"
+  Write-Host "Failed to publish vite-plugin-lazy-svg-sprite"
 }
 Pop-Location
 Write-Host "All packages have been published successfully!"

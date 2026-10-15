@@ -12,6 +12,8 @@ const __es_dirname = path.dirname(__filename)
 const sprite = fs.readFileSync(path.resolve(__es_dirname, 'utils/sprite.mjs'), 'utf-8')
 const svgs = fs.readFileSync(path.resolve(__es_dirname, 'components/svgs.mjs'), 'utf-8')
 const icon = fs.readFileSync(path.resolve(__es_dirname, 'components/icon.mjs'), 'utf-8')
+const reactSvgs = fs.readFileSync(path.resolve(__es_dirname, 'react/svgs.mjs'), 'utf-8')
+const reactIcon = fs.readFileSync(path.resolve(__es_dirname, 'react/icon.mjs'), 'utf-8')
 
 export type SvgSpritePluginOptions = {
   /** SVG 目录路径 */
@@ -26,6 +28,8 @@ const moduleIds = {
   sprite: 'virtual:svgs-sprite',
   svgs: 'virtual:svgs',
   icon: 'virtual:svg-icon',
+  svgsReact: 'virtual:svgs/react',
+  iconReact: 'virtual:svg-icon/react',
 }
 
 function replacePath(code: string) {
@@ -38,7 +42,7 @@ function getFiles(dir: string) {
   const svgDir = path.resolve(dir)
 
   if (!fs.existsSync(svgDir)) {
-    console.warn(`[vite-plugin-vue-svg-sprite] SVG directory not found: ${svgDir}`)
+    console.warn(`[vite-plugin-lazy-svg-sprite] SVG directory not found: ${svgDir}`)
     return []
   }
 
@@ -54,6 +58,8 @@ export default function svgSpritePlugin(options: SvgSpritePluginOptions = {}): P
   const spriteResolvedModuleId = '\0' + moduleIds.sprite
   const svgsResolvedModuleId = '\0' + moduleIds.svgs
   const iconResolvedModuleId = '\0' + moduleIds.icon
+  const reactSvgsResolvedModuleId = '\0' + moduleIds.svgsReact
+  const reactIconResolvedModuleId = '\0' + moduleIds.iconReact
 
   const resolvedOptions = {
     dir: path.resolve(process.cwd(), 'src/assets/svg'),
@@ -70,7 +76,7 @@ export default function svgSpritePlugin(options: SvgSpritePluginOptions = {}): P
   })
 
   return {
-    name: 'vite-plugin-vue-svg-sprite',
+    name: 'vite-plugin-lazy-svg-sprite',
     configureServer(server: ViteDevServer) {
       const svgDir = path.resolve(resolvedOptions.dir)
       server.watcher.add(svgDir)
@@ -87,6 +93,8 @@ export default function svgSpritePlugin(options: SvgSpritePluginOptions = {}): P
           server.moduleGraph.getModuleById(spriteResolvedModuleId),
           server.moduleGraph.getModuleById(svgsResolvedModuleId),
           server.moduleGraph.getModuleById(iconResolvedModuleId),
+          server.moduleGraph.getModuleById(reactSvgsResolvedModuleId),
+          server.moduleGraph.getModuleById(reactIconResolvedModuleId),
         ]
         mods.forEach((mod) => mod && server.moduleGraph.invalidateModule(mod))
         server.ws.send({ type: 'full-reload', path: '*' })
@@ -96,6 +104,8 @@ export default function svgSpritePlugin(options: SvgSpritePluginOptions = {}): P
       if (id === moduleIds.sprite) return spriteResolvedModuleId
       if (id === moduleIds.svgs) return svgsResolvedModuleId
       if (id === moduleIds.icon) return iconResolvedModuleId
+      if (id === moduleIds.svgsReact) return reactSvgsResolvedModuleId
+      if (id === moduleIds.iconReact) return reactIconResolvedModuleId
     },
     load(id) {
       if (id === spriteResolvedModuleId) {
@@ -108,6 +118,12 @@ export default function svgSpritePlugin(options: SvgSpritePluginOptions = {}): P
       }
       if (id === iconResolvedModuleId) {
         return replacePath(icon)
+      }
+      if (id === reactSvgsResolvedModuleId) {
+        return replacePath(reactSvgs)
+      }
+      if (id === reactIconResolvedModuleId) {
+        return replacePath(reactIcon)
       }
     },
   }

@@ -6,7 +6,7 @@ import Svgs from 'virtual:svgs'
 <template>
   <div class="app">
     <header class="header">
-      <h1>vite-plugin-vue-svg-sprite</h1>
+      <h1>vite-plugin-lazy-svg-sprite</h1>
       <nav>
         <RouterLink to="/">Icons</RouterLink>
         <RouterLink to="/about">About</RouterLink>

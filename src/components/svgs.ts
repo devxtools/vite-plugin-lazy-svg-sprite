@@ -1,5 +1,5 @@
-import { defineComponent, h } from 'vue';
-import { spriteSymbols } from 'virtual:svgs-sprite'
+import { defineComponent, h, onBeforeUnmount, ref } from 'vue'
+import { getSpriteSymbols, subscribe } from 'virtual:svgs-sprite'
 
 // 注释不能删除，它是替换符
 /*! __SPRITE__PATH__ */
@@ -7,6 +7,12 @@ import { spriteSymbols } from 'virtual:svgs-sprite'
 export default defineComponent({
   name: 'SvgSprite',
   setup() {
+    const symbols = ref(getSpriteSymbols())
+    const stop = subscribe(() => {
+      symbols.value = getSpriteSymbols()
+    })
+    onBeforeUnmount(stop)
+
     return () =>
       h(
         'svg',
@@ -19,10 +25,9 @@ export default defineComponent({
             overflow: 'hidden',
           },
         },
-        // 遍历 spriteSymbols
-        Object.entries(spriteSymbols.value).map(([id, raw]) =>
-          h('g', { innerHTML: raw, key: id })
-        )
+        Object.entries(symbols.value).map(([id, raw]) =>
+          h('g', { innerHTML: raw, key: id }),
+        ),
       )
   },
 })

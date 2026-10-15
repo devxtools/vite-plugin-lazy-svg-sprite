@@ -1,3 +1,4 @@
+import { copyFileSync } from 'node:fs'
 import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({
@@ -6,6 +7,8 @@ export default defineBuildConfig({
     'src/utils/sprite.ts',
     'src/components/svgs',
     'src/components/icon',
+    'src/react/svgs',
+    'src/react/icon',
   ],
   clean: true,
   declaration: 'compatible',
@@ -33,7 +36,9 @@ export default defineBuildConfig({
     'to-regex-range',
     'is-number',
     'queue-microtask',
-    'vue'
+    'vue',
+    'react',
+    'react/jsx-runtime',
   ],
   rollup: {
     emitCJS: false,
@@ -42,5 +47,11 @@ export default defineBuildConfig({
   failOnWarn: false,
   alias: {
     '@': 'src'
-  }
+  },
+  hooks: {
+    'build:done'() {
+      copyFileSync('src/react/virtual.d.ts', 'dist/react/virtual.d.ts')
+      copyFileSync('src/type.d.ts', 'dist/vue-virtual.d.ts')
+    },
+  },
 })
